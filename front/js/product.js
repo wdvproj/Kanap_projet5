@@ -36,6 +36,59 @@ fetch(idUrl)
         option.setAttribute("value", value.colors[i]);
         option.textContent = value.colors[i];
     }
+
+    let quantity = document.getElementById("quantity");
+    
+    quantity.addEventListener("change", function(event) {
+        quantity.setAttribute("value", event.target.value);
+    })
+
+    colors.addEventListener("change", function(event) {
+        colors.setAttribute("value", event.target.value);
+    })
+    
+    let cartButton = document.getElementById("addToCart");
+
+    let moreCartItem;
+
+    let knownItem;
+
+    cartButton.addEventListener("click", function(event) {
+        moreCartItem = [{id: value._id , quantity: quantity.getAttribute("value"), color: colors.getAttribute("value")}];
+        let cart = JSON.parse(localStorage.getItem("cart")); 
+
+        if (cart === null) {
+            cart = [{id: value._id , quantity: quantity.getAttribute("value"), color: colors.getAttribute("value")}];
+            localStorage.setItem("cart", JSON.stringify(cart));
+        }
+         
+        else {
+            for (let i in cart) {
+
+                if (cart[i].id === moreCartItem[0].id && cart[i].color === moreCartItem[0].color) {
+                    cart[i].quantity = Number(moreCartItem[0].quantity) + Number(cart[i].quantity);
+                    localStorage.setItem("cart", JSON.stringify(cart)); 
+                }
+    
+                else {
+                    for (let i in cart) {
+                        if (cart[i].id === moreCartItem[0].id && cart[i].color === moreCartItem[0].color) {
+                            knownItem = true;
+                        }
+                        else {
+                            knownItem = false;
+                        }
+                    }
+                }
+            }
+
+            if (knownItem === false) {
+                cart.push({id: value._id , quantity: quantity.getAttribute("value"), color: colors.getAttribute("value")});
+                localStorage.setItem("cart", JSON.stringify(cart));
+            }
+        }
+        console.log(cart);    
+    })
 })
 
 .catch(function(error) {
