@@ -1,108 +1,79 @@
 /* Recupere les donnees stockees dans l'API */
   
-/*function dataCollect(url) {
-    fetch(url)
-    .then(function(response) {
-      if (response.ok) {
-        return response.json();
-      }
-    })
-  }*/
-
-/* Ajoute un element enfant, ses attributs et son contenu, dans un element parent identifie par un id */ 
-
-// "tagName" est le nom de l'element enfant, "idContainer" est l'identifiant de l'element parent, "attributes" est un tableau contenant des tableaux composes du nom et de la valeur d'un attribut, "contents" est le contenu de l'element enfant
-
-function addElementIntoId(tagName, idContainer, attributes, contents) {
-  let element = document.createElement(tagName);
-  let container = document.getElementById(idContainer);
-  container.appendChild(element);
-  if (attributes) {
-    for (let attribute of attributes) {
-      element.setAttribute(attribute[0], attribute[1]);
-    }
-  }
-  if (contents) {
-    element.textContent = contents[i];
-  }
-}
-
-/* Ajoute un element enfant, ses attributs et son contenu, dans un element parent */ 
-
-// "tagName" est le nom de l'element enfant, "tagNameContainer" est le nom de l'element parent, "attributes" est un tableau contenant des tableaux composes du nom et de la valeur d'un attribut, "contents" est le contenu de l'element enfant
-
-async function addElementIntoTag(tagName, tagNameContainer, attributes, contents) {
-  let container = document.querySelectorAll(tagNameContainer);
-  for (let i in container) {
-    let element = document.createElement(tagName);
-    // renvoie une erreur
-    container[i].appendChild(element);
-    if (attributes) {
-      for (let attribute of attributes[i]) {
-        element.setAttribute(attribute[0], attribute[1]);
-      }
-    }
-    if (contents) {
-      element.textContent = contents[i];
-    }
-  }
-}
-
-
-fetch("http://localhost:3000/api/products")
-.then(function(response) {
+async function dataCollect(url) {
+  let response = await fetch(url);
   if (response.ok) {
     return response.json();
   }
-})
+}
 
+/* Ajoute un element enfant a un element parent */ 
+
+// "childTagName" est le nom de l'element enfant, "parentTagName" est le nom de l'element parent, ce sont des chaînes de caracteres
+
+
+function addChildIntoParent(childTagName, parentTagName) {
+  let childData;
+  let parent = document.querySelectorAll(parentTagName);
+  
+  if (parent.length === 1) {
+    childData = document.createElement(childTagName);
+    parent[0].appendChild(childData);
+  }
+  else {
+    for (let i = 0; i < parent.length; i++) {
+      let child = document.createElement(childTagName);
+      parent[i].appendChild(child);
+      if (i === 0) {
+        childData = [];
+      }
+      childData.push(child);
+    }
+  }
+  return childData;
+}
+
+dataCollect("http://localhost:3000/api/products")
 .then(function(value) {
 
-  // Ajout des liens
+  // Ajout des liens vers la page produit
 
   for (let i in value) {
-    let linkArray = [["href", "./product.html?id=" + value[i]._id]];
-    addElementIntoId("a", "items", linkArray);
+      addChildIntoParent("a", "section[id='items']").setAttribute("href", "./product.html?id=" + value[i]._id);
   }
 
-  // Ajout des balises <article>
+  // Ajout des balises <article> 
 
-  addElementIntoTag("article", "a[href*='./product.html?id=']");
+  addChildIntoParent("article", "a[href*='./product.html?id=']");
 
-  // Ajout des images
+  // Ajout des images des produits
 
-  let pictureArray = [];
+  let pictureAttribute = addChildIntoParent("img", "article");
 
-  for (let i in value) {
-    pictureArray.push([["src", value[i].imageUrl], ["alt", value[i].altTxt]]);
-  }
-  addElementIntoTag("img", "article", pictureArray);
-
-  // Ajout des titres
-
-  let titleArray = [];
-  let titleContent = [];
-
-  for (let i in value) {
-    titleArray.push([["class", "productName"]]);
-    titleContent.push(value[i].name);
+  for (let i in pictureAttribute) {
+    pictureAttribute[i].setAttribute("src", value[i].imageUrl);
+    pictureAttribute[i].setAttribute("alt", value[i].altTxt);
   }
 
-  addElementIntoTag("h3", "article", titleArray, titleContent);
+  // Ajout des titres des produits
 
-  // Ajout des descriptions
+  let titleAttributeAndContent =  addChildIntoParent("h3", "article");
 
-  let descriptionArray = [];
-  let descriptionContent = [];
-
-  for (let i in value) {
-    descriptionArray.push([["class", "productDescription"]]);
-    descriptionContent.push(value[i].description);
+  for (let i in titleAttributeAndContent) {
+    titleAttributeAndContent[i].setAttribute("class", "productName");
+    titleAttributeAndContent[i].textContent = value[i].name;
   }
+  
+  // Ajout des descriptions des produits
 
-  addElementIntoTag("p", "article", descriptionArray, descriptionContent);
+  let descriptionAttributeAndContent =  addChildIntoParent("p", "article");
+
+  for (let i in descriptionAttributeAndContent) {
+    descriptionAttributeAndContent[i].setAttribute("class", "productDescription");
+    descriptionAttributeAndContent[i].textContent = value[i].description;
+  }
 }) 
 
 .catch(function(error) {
-  console.log("Erreur" + error.message);
+  console.log("Erreur : " + error.message);
 })
