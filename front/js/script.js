@@ -1,36 +1,36 @@
-/* Recuperer les donnees stockees dans l'API */
+/* Recupere les donnees des produits, stockees dans l'API */
 
-async function dataCollect(url) {
+async function collectProductsData(url) {
   let response = await fetch(url);
   if (response.ok) {
     return response.json();
   }
 }
 
-/* Creer un produit */
+/* Cree un bloc d'elements DOM pour un produit a partir des donnees des produits*/
 
 function createProduct(productsData) {
 
-  // Ajout du lien vers la page produit
+  // Ajoute le lien vers la page produit
   let link = document.createElement("a");
   link.setAttribute("href", "./product.html?id=" + productsData._id);
 
-  // Ajout de la balise <article> 
+  // Ajoute la balise <article> 
   let article = document.createElement("article");
 
-  // Ajout de l'image du produit
+  // Ajoute l'image du produit
   let picture = document.createElement("img");
   picture.setAttribute("src", productsData.imageUrl);
   picture.setAttribute("alt", productsData.altTxt);
   article.appendChild(picture);
 
-  // Ajout du titre du produit
+  // Ajoute le titre du produit
   let title = document.createElement("h3");
   title.setAttribute("class", "productName");
   title.textContent = productsData.name;
   article.appendChild(title);
 
-  // Ajout de la description du produit
+  // Ajoute la description du produit
   let description = document.createElement("p");
   description.setAttribute("class", "productDescription");
   description.textContent = productsData.description;
@@ -41,7 +41,7 @@ function createProduct(productsData) {
   return link;
 }
 
-/* Afficher les produits sur la page */
+/* Affiche les produits sur la page */
 
 // "productsContainer" est le selecteur du conteneur des produits, "products" est un tableau contenant l'ensemble des produits
 function displayProducts(productsContainer, products) {
@@ -52,7 +52,7 @@ function displayProducts(productsContainer, products) {
 }
 
 // Recupere les donnees des produits 
-dataCollect("http://localhost:3000/api/products")
+collectProductsData("http://localhost:3000/api/products")
   .then(function(productsData) {
     // Cree les elements DOM des produits
     let products = [];
@@ -62,8 +62,8 @@ dataCollect("http://localhost:3000/api/products")
     }
 
     // Affiche les produits
-    displayProducts("section[id='items']", products);
+    displayProducts("#items", products);
   })
   .catch(function(error) {
-    console.log("Erreur : " + error.message);
+    console.error(`Erreur : ${error}`);
   })
