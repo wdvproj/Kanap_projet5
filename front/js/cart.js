@@ -1,47 +1,44 @@
-let cart = JSON.parse(localStorage.getItem("cart"));  
-
-/* Recuperer les donnees stockees dans l'API */
+/* Recupere les donnees des produits, stockees dans l'API */
   
-async function dataCollect(url) {
+async function collectProductsData(url) {
     try {
         let response = await fetch(url);
         if (response.ok) {
-        return response.json();
+            return response.json();
         }
     } catch (error) {
-        console.log("Erreur : " + error.message);
+        console.error(`Erreur : ${error}`);
     }
 }
 
-/* Regrouper les produits par modele */
+/* Regroupe les produits par modele */
 
-async function sortData(url, storageData) {    
+function sortData(apiData, localData) {    
     try {
-        let apiData  = await dataCollect(url);
         let sortedData = [];
         for (let i in apiData) {
-            for (let k in storageData) {
-                if (storageData[k].id == apiData[i]._id) {
-                    sortedData.push(storageData[k]);
+            for (let k in localData) {
+                if (localData[k].id == apiData[i]._id) {
+                    sortedData.push(localData[k]);
                 }
             }
         }
         return sortedData; 
     } catch (error) {
-        console.log("Erreur : " + error.message);
+        console.error(`Erreur : ${error}`);
     }
 } 
 
-/* Creer un produit */
+/* Cree un produit */
 
 function createProduct(apiData, localData) {
-    // Ajout du conteneur principal 
+    // Ajoute le conteneur principal 
     let article = document.createElement("article");
     article.setAttribute("class", "cart__item");
     article.setAttribute("data-id", apiData._id);
     article.setAttribute("data-color", localData.color);
   
-    // Ajout de l'image du produit
+    // Ajoute l'image du produit
     let pictureContainer = document.createElement("div");
     article.appendChild(pictureContainer);
     pictureContainer.setAttribute("class", "cart__item__img");
@@ -51,12 +48,12 @@ function createProduct(apiData, localData) {
     image.setAttribute("alt", "Photographie d'un canapé");
 
   
-    // Ajout du conteneur du contenu
+    // Ajoute le conteneur du contenu
     let contentContainer = document.createElement("div");
     article.appendChild(contentContainer);
     contentContainer.setAttribute("class", "cart__item__content");
   
-    // Ajout de la description du produit
+    // Ajoute la description du produit
     let descriptionContainer = document.createElement("div");
     contentContainer.appendChild(descriptionContainer);
     descriptionContainer.setAttribute("class", "cart__item__content__description");
@@ -73,7 +70,7 @@ function createProduct(apiData, localData) {
     descriptionContainer.appendChild(price);
     price.textContent = apiData.price.toFixed(2) + "€";
 
-    // Ajout de la quantite du produit 
+    // Ajoute la quantite du produit 
     let settingsContainer = document.createElement("div");
     contentContainer.appendChild(settingsContainer);
     descriptionContainer.setAttribute("class", "cart__item__content__settings");
@@ -95,7 +92,7 @@ function createProduct(apiData, localData) {
     quantityInput.setAttribute("max", 100);
     quantityInput.setAttribute("value", localData.quantity);
 
-    // Suppression du produit
+    // Ajoute la suppression du produit
     let deleteContainer = document.createElement("div");
     settingsContainer.appendChild(deleteContainer);
     deleteContainer.setAttribute("class", "cart__item__content__settings__delete");
@@ -108,7 +105,7 @@ function createProduct(apiData, localData) {
     return article;
 }
   
-/* Afficher les produits sur la page */
+/* Affiche les produits sur la page */
 
 // "productsContainer" est le selecteur du conteneur des produits, "products" est un tableau contenant l'ensemble des produits
 function displayProducts(productsContainer, products) {
@@ -118,92 +115,104 @@ function displayProducts(productsContainer, products) {
     } 
 }
 
-/* Calculer le nombre d'articles */
 
-// "quantities" est un tableau contenant la quantite de chaque article
-function calculateQuantity(quantities) {
+/* Calcule le nombre d'articles */
+
+// "articles" est un tableau contenant la quantite de chaque produit
+function calculateQuantity(apiData,  localData, articles) {
     let totalQuantity = 0;
-    for (let quantity of quantities) {
-        totalQuantity = totalQuantity + Number(quantity);
+    if (localData.length !== 0) {
+        for (let i in apiData) {
+            for (let k in localData) {
+                if (apiData[i]._id == localData[k].id) {
+                    let articleQuantity = localData[k].quantity;
+                    articles.push(articleQuantity);
+                }
+            }
+        }
+        totalQuantity = articles.reduce((first, second) => first + second);
+    } else { 
+        totalQuantity = 0;
     }
     return totalQuantity;
 }
 
-/* Afficher le nombre d'articles */
+/* Calcule le prix total */
 
-// "articles" est un tableau contenant la quantite de chaque article, "element" est l'element contenant la valeur du nombre d'articles
-function displayQuantity(articles, localData, element) {
-    for (let i in localData) {
-        let article = localData[i].quantity;
-        articles.push(article);
-    }
-    element.textContent = calculateQuantity(articles);
-    return articles;
-}
-
-/* Calculer le prix total */
-
-// "prices" est un tableau contenant les prix, "quantities" est un tableau contenant la quantite de chaque article
-function calculatePrice(prices, quantities) {
+// "prices" est un tableau contenant le prix de chaque produit, "articles" est un tableau contenant la quantite de chaque produit
+function calculatePrice(apiData,  localData, prices, articles) {
     let totalPrice = 0;
-    for (let i in prices) {
-        if (quantities[i] > 1 || quantities[i] == 0) {
-            prices[i] = Number(quantities[i]) * prices[i];
+    if (localData.length !== 0) {
+        for (let i in apiData) {
+            for (let k in localData) {
+                if (apiData[i]._id == localData[k].id) {
+                    let articleQuantity = localData[k].quantity;
+                    articles.push(articleQuantity);
+                    let price = apiData[i].price;
+                    prices.push(price);
+                }
+            }
         }
-        totalPrice = totalPrice + prices[i];
+        for (let i in prices) {
+            if (articles[i] > 1 || articles[i] == 0) {
+                prices[i] = articles[i] * prices[i];
+            }
+            totalPrice = prices.reduce((first, second) => first + second);
+        }
+    } else {
+        totalPrice = 0;
     }
     return totalPrice;
 }
 
-/* Afficher le prix total */
+/* Stocke les donnees en local */
 
-// "prices" est un tableau contenant le prix de chaque article, "element" est l'element contenant la valeur du prix total
-async function displayPrice(prices, localData, element, articles) {
-    apiData = await retrieveProductData(localData);
-    for (let i in apiData) {
-        let price = apiData[i].price;
-        prices.push(price);
-    }
-    element.textContent = calculatePrice(prices, articles);
-}
-
-/* Recupere les donnees de chaque produit du panier, dans l'api */
-
-async function retrieveProductData(cart) {
-    let data = [];
-    for (let i in cart) {
-        let productUrl = "http://localhost:3000/api/products/" + cart[i].id;
-        data.push(await dataCollect(productUrl));
-    }
-    return data;
+// "dataName" est une chaîne de caracteres
+function storeData(dataName, data) {
+    localStorage.setItem(dataName, JSON.stringify(data));
 }
 
 async function main() {
+    let cart = JSON.parse(localStorage.getItem("cart"));
+    // Affiche les donnees des produits
     try {
-        let url = "http://localhost:3000/api/products";
+        // Verifie le contenu du panier
+        if (cart == 0) {
+            // Supprime les produits du panier apres une confirmation de commande
+            let orderedProducts = document.getElementsByClassName("cart__item");
+            for (let product of orderedProducts) {
+                product.remove();
+            }
+        }
+        // Recupere les donnees des produits, dans l'API
+        let apiData = await collectProductsData("http://localhost:3000/api/products");
+
         // Groupe les produits par modele
-        cart = await sortData(url, cart);
+        cart = sortData(apiData, cart);
 
         // Cree les elements DOM des produits
         let products = [];
-        let productData = await retrieveProductData(cart);
-        for (let i in productData) {
-            let product =  createProduct(productData[i], cart[i]);
-            products.push(product);
+        for (let i in apiData) {
+            for (let k in cart) {
+                if (apiData[i]._id == cart[k].id) {
+                    let product =  createProduct(apiData[i], cart[k]);
+                    products.push(product);
+                }
+            }
         }
 
         // Affiche les produits
-        displayProducts("section[id='cart__items']", products);
+        displayProducts("#cart__items", products);
 
         // Affiche le nombre d'articles
         let articles = [];
         let numberOfArticle = document.getElementById("totalQuantity");
-        let articlesArray = displayQuantity(articles, cart, numberOfArticle);
+        numberOfArticle.textContent = calculateQuantity(apiData, cart, articles);
 
         // Affiche le prix total
         let prices = [];
         let totalCost = document.getElementById("totalPrice");
-        displayPrice(prices, cart, totalCost, articlesArray);
+        totalCost.textContent = calculatePrice(apiData, cart, prices, articles);
 
         // Supprime un produit
         let removeItemArray = document.querySelectorAll("p[class='deleteItem']");
@@ -221,58 +230,213 @@ async function main() {
                         cart.splice(i, 1);
                     }
                 }
-                localStorage.setItem("cart", JSON.stringify(cart));
+                storeData("cart", cart);
 
                 // Supprime les elements DOM du produit supprime
                 removedProduct.remove();
 
                 // Affiche le nombre d'articles
                 articles = [];
-                let articlesArray = displayQuantity(articles, cart, numberOfArticle);
+                numberOfArticle.textContent = calculateQuantity(apiData, cart, articles);
 
                 // Affiche le prix total
                 prices = [];
-                displayPrice(prices, cart, totalCost, articlesArray);
+                totalCost.textContent = calculatePrice(apiData, cart, prices, articles);
             }); 
         }
 
-        // Modifie la quantite d'un article
+        // Modifie la quantite d'un produit
         let quantityItemArray = document.getElementsByClassName("itemQuantity");
-        for (let article of quantityItemArray) {
-            article.addEventListener("change", function(event) {
-                
-                // Modifie le contenu de l'element input 
-                article.setAttribute("value", event.target.value);
+        for (let articleQuantity of quantityItemArray) {
+            articleQuantity.addEventListener("change", function(event) {
+
+                // Modifie la valeur de l'element input 
+                articleQuantity.setAttribute("value", event.target.value);
 
                 // Selectionne le produit
-                let productNewQuantity = article.closest("article[class='cart__item']");
+                let productNewQuantity = articleQuantity.closest("article[class='cart__item']");
                 let dataColor = productNewQuantity.dataset.color;
                 let dataId = productNewQuantity.dataset.id;
 
                 // Modifie le panier
-                articles = [];
+                let wrongQuantity = 0;
                 for (let i in cart) {
                     if (dataColor === cart[i].color && dataId === cart[i].id) {
-                        cart[i].quantity = article.value;
-                        articles[i] = article.value;
+                        if (Number(articleQuantity.value) < 1 || Number(articleQuantity.value) > 100) {
+                            wrongQuantity++;
+                        }
+                        if (wrongQuantity !== 0) {
+                            window.alert("Vous pouvez ajouter 1 article ou jusqu'à 100 articles par produit, au panier");
+                        }
+                        cart[i].quantity = Number(articleQuantity.value);
                     }
                 }
-                localStorage.setItem("cart", JSON.stringify(cart));               
+                storeData("cart", cart);            
 
-                // Affiche le nombre d'articles
-                articles = [];
-                let articlesArray = displayQuantity(articles, cart, numberOfArticle);
+               // Affiche le nombre d'articles
+               articles = [];
+               numberOfArticle.textContent = calculateQuantity(apiData, cart, articles);
 
-                // Affiche le prix total
-                prices = [];
-                displayPrice(prices, cart, totalCost, articlesArray);
+               // Affiche le prix total
+               prices = [];
+               totalCost.textContent = calculatePrice(apiData, cart, prices, articles);
             });
         } 
 
+    } catch(error) {
+        console.error(`Erreur : ${error}`);
     }
 
-    catch(error) {
-        console.log("Erreur : ", error.message);
+    // Envoie les donnees du formulaire
+    try {
+        let orderButton = document.getElementById("order");
+        orderButton.addEventListener("click", function(event) {
+            event.preventDefault();
+
+            // Recupere les valeurs des champs de saisie 
+            let firstName = document.getElementById("firstName");
+            let lastName = document.getElementById("lastName");
+            let address = document.getElementById("address");
+            let city = document.getElementById("city");
+            let email = document.getElementById("email");
+
+            // Cree l'objet 'contact'
+            let contact = {"firstName": firstName.value, "lastName": lastName.value, "address": address.value, "city": city.value,"email": email.value};
+            
+            // Initialise la valeur initiale du contenu des messages d'erreur
+            let firstNameErrorMsg = document.getElementById("firstNameErrorMsg");
+            firstNameErrorMsg.textContent = "";
+            let lastNameErrorMsg = document.getElementById("lastNameErrorMsg");
+            lastNameErrorMsg.textContent = "";
+            let addressErrorMsg = document.getElementById("addressErrorMsg");
+            addressErrorMsg.textContent = "";
+            let cityErrorMsg = document.getElementById("cityErrorMsg");
+            cityErrorMsg.textContent = "";
+            let emailErrorMsg = document.getElementById("emailErrorMsg");
+            emailErrorMsg.textContent = "";
+
+            // Analyse les donnees de formulaire
+            let blank = "";
+            let numberRegexp = /\d+/;
+            let contactValidation = 0;
+            // Affiche un message d'alerte lorsque le prenom et le nom possedent un chiffre
+            if (contact.firstName === blank) {
+                firstNameErrorMsg.textContent = "Ecrivez votre prénom !"
+            } else {
+                if (!numberRegexp.test(contact.firstName) && typeof contact.firstName === "string") {
+                    contactValidation++;
+                } else {
+                    firstNameErrorMsg.textContent = "Votre prénom ne doit pas contenir de chiffres";
+                }
+            }
+            if (contact.lastName === blank) {
+                lastNameErrorMsg.textContent = "Ecrivez votre nom !"
+            } else {
+                if (!numberRegexp.test(contact.lastName) && typeof contact.lastName === "string") {
+                    contactValidation++;
+                } else {
+                    lastNameErrorMsg.textContent = "Votre nom ne doit pas contenir de chiffres";
+                }
+            }
+            // Affiche un message d'alerte lorsque l'adresse ne contient pas un numero et un nom de rue, avenue
+            let streetRegexp = /[0-9+ +]\brue\b[ +A-Za-z+^0-9]/i;
+            let avenueRegexp = /[0-9+ +]\bavenue\b[ +A-Za-z+^0-9]/i;
+            if (contact.address === blank) {
+                addressErrorMsg.textContent = "Ecrivez votre adresse !"
+            } else {
+                if (streetRegexp.test(contact.address) || avenueRegexp.test(contact.address) && typeof contact.address === "string") {
+                    contactValidation++;
+                } else {
+                    addressErrorMsg.textContent = "Votre adresse doit être composée d'un numéro et d'un nom de rue ou d'avenue";
+                }
+            }
+            // Affiche un message d'alerte lorsque la ville possede un chiffre
+            if (contact.city === blank) {
+                cityErrorMsg.textContent = "Ecrivez le nom de la ville !"
+            } else {
+                if (!numberRegexp.test(contact.city) && typeof contact.city === "string") {
+                    contactValidation++;
+                } else {
+                    cityErrorMsg.textContent = "La ville ne doit pas contenir de chiffres";
+                }
+            }
+            // Affiche un message d'alerte lorsque l'email ne contient pas de '@' et n'a pas par exemple la forme suivante : exemple@exemple.fr
+            let emailRegexp = /\w+@\w+\.\w+/;
+            if (contact.firstName === blank) {
+                emailErrorMsg.textContent = "Ecrivez votre email !"
+            } else {
+                if (emailRegexp.test(contact.email) && typeof contact.email === "string") {
+                    contactValidation++;
+                } else {
+                    emailErrorMsg.textContent = "L'adresse mail n'est pas correcte !";
+                }
+            }
+
+            // Cree le tableau des identifiants des produits du panier
+            let products = [];
+            let productsValidation = 0;
+            // Verifie que les identifiants sont des chaînes de caracteres
+            for (let i in cart) {
+                if (typeof cart[i].id === "string") {
+                    products.push(cart[i].id);
+                    productsValidation++;
+                }
+            }
+            if (productsValidation === 0) {
+                window.alert("Choisissez un canapé !");
+            }
+
+            // Verifie le nombre d'articles par produit
+            let wrongQuantity = 0;
+            for (let product of cart) {
+                if (product.quantity < 1 || product.quantity > 100) {
+                    wrongQuantity++;
+                }
+            }
+            if (wrongQuantity !== 0) {
+                window.alert("Vous pouvez ajouter 1 article ou jusqu'à 100 articles par produit, au panier");
+            }
+
+            // Verifie la presence de l'objet 'contact' valide et du tableau 'products' valide
+            if (contactValidation === 5 && productsValidation !== 0 && wrongQuantity === 0) {
+                // Envoie les donnees du formulaire et le tableau d'identifiants vers l'API
+                let data = JSON.stringify({"contact": contact, "products": products});
+                fetch("http://localhost:3000/api/products/order", {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: data
+                })
+                    .then(function(response) {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                    })
+                    .then(function(data) {
+                        // Cree l'URL vers la page de confirmation
+                        let orderId =  data.orderId;
+                        let confirmationUrl = "./confirmation.html?";
+                        let orderParameter = new URLSearchParams(confirmationUrl.search);
+                        orderParameter.set("orderId", orderId);
+                        let confirmationUrlParameter = confirmationUrl + orderParameter.toString();
+                        orderId = "";
+                        return confirmationUrlParameter;
+                    })
+                    .then(function(url) {
+                        // Ouvre la page de confirmation
+                        window.open(url, "_self");
+                    })
+                    .catch(function(error) {
+                        console.error(`Erreur : ${error}`);
+                    })
+            } 
+        });
+      
+
+    } catch(error) {
+        console.error(`Erreur : ${error}`);
     }
 }
 
