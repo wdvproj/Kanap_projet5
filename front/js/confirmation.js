@@ -1,6 +1,9 @@
-/* Recupere les parametres d'url */
+/** 
+ * Recupere les parametres d'url 
+ * @param { String } parameter - parametre recherche dans l'url
+ * @return { String } 
+ */
 
-// "parameter" est le parametre recherche dans l'url, c'est une chaîne de caracteres
 function getUrlParameter(parameter) {
     let url = new URL(window.location.href);
   
@@ -11,9 +14,12 @@ function getUrlParameter(parameter) {
     return foundParameter;
 }
 
-/* Stocke les donnees en local */
+/** 
+ * Stocke les donnees en local 
+ * @param { String } dataName
+ * @param { Array.<Object> } data - tableau de tableaux
+ */
 
-// "dataName" est une chaîne de caracteres
 function storeData(dataName, data) {
   localStorage.setItem(dataName, JSON.stringify(data));
 }
@@ -23,11 +29,6 @@ let orderId = getUrlParameter("orderId");
 
 let displayedOrder = document.getElementById("orderId");
 
-displayedOrder.textContent = orderId;
+displayedOrder.textContent = orderId; 
 
-// Supprime la donnee de l'identifiant de commande
-orderId = "";
 
-// Supprime les donnees locales
-cart = [];
-storeData("cart", cart);
