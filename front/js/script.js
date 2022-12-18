@@ -1,33 +1,33 @@
 /** 
- * Recupere les donnees du produit ou des produits, stockees dans le back-end
+ * Récupère les données du produit ou des produits, stockées dans le back-end
  * @param { String } url
  * @return { Promise } 
  */
 
 async function collectProductsData(url) {
   try {
-      let response = await fetch(url);
-      if (response.ok) {
-          return response.json();
-      }
-  } catch (error) {
-      console.error(`Erreur : ${error}`);
+    let response = await fetch(url);
+    if (response.ok) {
+      return response.json();
+    }
+  } 
+  catch(error) {
+    console.error(`Erreur : ${error}`);
   }
 }
 
 /**
- * Cree un bloc d'elements DOM pour un produit a partir des donnees 
+ * Crée un bloc d'éléments DOM à partir des données d'un produit
  * @param { Object } productData
  * @return { HTMLElement }
  */
 
 function createProduct(productData) {
-  
-  // Ajoute le lien vers la page produit
+  // Ajoute le lien vers la page du produit
   let link = document.createElement("a");
   link.setAttribute("href", "./product.html?id=" + productData._id);
 
-  // Ajoute la balise <article> 
+  // Ajoute un élément <article>  
   let article = document.createElement("article");
 
   // Ajoute l'image du produit
@@ -55,8 +55,8 @@ function createProduct(productData) {
 
 /** 
  * Affiche les produits sur la page 
- * @param { String } productsContainer - selecteur du conteneur des produits
- * @param { Array.<HTMLElement> } products - tableau contenant l'ensemble des produits
+ * @param { String } productsContainer - sélecteur du conteneur des éléments DOM des produits
+ * @param { Array.<HTMLElement> } products - tableau contenant l'ensemble des éléments DOM des produits
  */
 
 function displayProducts(productsContainer, products) {
@@ -64,19 +64,12 @@ function displayProducts(productsContainer, products) {
   for (let product of products) {
     container.appendChild(product);
   } 
-}
+} 
 
-/*window.addEventListener("load", function(event) {
-  let body = document.querySelector("body");
-  let script = document.createElement("script");
-  script.setAttribute("src", "../js/functions.js");
-  body.appendChild(script);
-});*/
-
-// Recupere les donnees des produits 
+// Récupère les données des produits 
 collectProductsData("http://localhost:3000/api/products")
   .then(function(productsData) {
-    // Cree les elements DOM des produits
+    // Crée les éléments DOM des produits
     let products = [];
     for (let productData of productsData) {
       let product = createProduct(productData);

@@ -1,6 +1,6 @@
 /** 
- * Recupere les parametres d'url 
- * @param { String } parameter - parametre recherche dans l'url
+ * Récupère les paramètres d'URL
+ * @param { String } parameter - paramètre recherché dans l'URL
  * @return { String } 
  */
 
@@ -12,19 +12,9 @@ function getUrlParameter(parameter) {
     let foundParameter = searchParams.get(parameter);
   
     return foundParameter;
-}
+} 
 
-/** 
- * Stocke les donnees en local 
- * @param { String } dataName
- * @param { Array.<Object> } data - tableau de tableaux
- */
-
-function storeData(dataName, data) {
-  localStorage.setItem(dataName, JSON.stringify(data));
-}
-
-// Affiche l'identifiant de commande
+// Affiche le numéro de commande
 let orderId = getUrlParameter("orderId");
 
 let displayedOrder = document.getElementById("orderId");

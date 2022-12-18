@@ -1,6 +1,6 @@
 /** 
- * Recupere les parametres d'url 
- * @param { String } parameter - parametre recherche dans l'url
+ * Récupère les paramètres d'URL
+ * @param { String } parameter - paramètre recherché dans l'URL
  * @return { String } 
  */
 
@@ -15,24 +15,25 @@ function getUrlParameter(parameter) {
 }
 
 /** 
- * Recupere les donnees du produit ou des produits, stockees dans le back-end
+ * Récupère les données du produit ou des produits, stockées dans le back-end
  * @param { String } url
  * @return { Promise } 
  */
 
 async function collectProductsData(url) {
   try {
-      let response = await fetch(url);
-      if (response.ok) {
-          return response.json();
-      }
-  } catch (error) {
-      console.error(`Erreur : ${error}`);
+    let response = await fetch(url);
+    if (response.ok) {
+      return response.json();
+    }
+  } 
+  catch(error) {
+    console.error(`Erreur : ${error}`);
   }
 } 
 
 /** 
- * Ajoute les donnees du produit aux elements du DOM 
+ * Ajoute les données du produit aux éléments du DOM 
  * @param { Object } productData
  */
 
@@ -58,23 +59,13 @@ function addProductData(productData) {
 
   // Ajoute les couleurs du produit
   let colors = document.getElementById("colors");
-  for (let i in productData.colors) {  
+  for (let index in productData.colors) {  
     let option = document.createElement("option");
     colors.appendChild(option);
-    option.setAttribute("value", productData.colors[i]);
-    option.textContent = productData.colors[i];  
+    option.setAttribute("value", productData.colors[index]);
+    option.textContent = productData.colors[index];  
   }
 }                                                                                     
-
-/** 
- * Stocke les donnees en local 
- * @param { String } dataName
- * @param { Array.<Object> } data - tableau de tableaux
- */
-
-function storeData(dataName, data) {
-  localStorage.setItem(dataName, JSON.stringify(data));
-}
 
 /** 
  * Remplit le panier 
@@ -85,19 +76,19 @@ function storeData(dataName, data) {
 
 function changeCart(cart, newItem) {
   let knownItem;
-  // Si le panier n'est pas stocke en local, il est vide
+  // Si le panier n'est pas stocké en local, il est vide
   if (!cart) {
     cart = [];
   }
-  for (let i in cart) {
-    // Modifie la quantite, si le produit est le meme
-    if (cart[i][0] === newItem[0] && cart[i][2] === newItem[2]) {
-      cart[i][1] = cart[i][1] + newItem[1];
+  for (let index in cart) {
+    // Si le produit est déjà dans le panier, la quantité d'articles est modifiée
+    if (cart[index][0] === newItem[0] && cart[index][2] === newItem[2]) {
+      cart[index][1] = cart[index][1] + newItem[1];
       knownItem = true;
       break;
     } 
   }
-  // Ajoute le nouveau produit au panier
+  // Si le produit n'est pas dans le panier, il est ajouté au panier
   if (!knownItem) {
     cart.push(newItem);
     window.alert("Le produit est ajouté à votre panier !");
@@ -105,21 +96,20 @@ function changeCart(cart, newItem) {
   return cart;
 }
 
-// Recupere l'identifiant pour former l'URL du produit
+// Récupère l'identifiant du produit
 let idNumber = getUrlParameter("id");
 let productUrl = "http://localhost:3000/api/products/" + idNumber;
 
-// Recupere les donnees du produit
+// Récupère les données du produit
 collectProductsData(productUrl)
   .then(async function(productData) {
-    //Complete les donnees du produit
+    //Complète les données du produit
     addProductData(productData);
 
     // Ajoute un produit au panier
     let cartButton = document.getElementById("addToCart");
-    let apiData = await collectProductsData("http://localhost:3000/api/products/");
     cartButton.addEventListener("click", function(event) {
-      // Verifie la couleur et la quantite
+      // Vérifie la couleur et la quantité
       let colors = document.getElementById("colors");
       let quantity = document.getElementById("quantity");
 
@@ -133,28 +123,17 @@ collectProductsData(productUrl)
         return;
       }
       
-      // Recupere les donnees du produit selectionne
+      // Récupère les données du produit sélectionné
       let newItem = [productData._id , Number(quantity.value), colors.value];
 
-      // Recupere les donnees stockees en local
+      // Récupère les données stockées en local
       let cart = JSON.parse(localStorage.getItem("cart")); 
 
-      // Modifie le panier
+      // Modifie le panier 
       let newCart = changeCart(cart, newItem);
-      storeData("cart", newCart);
 
-      // Affiche le contenu du panier
-      let productName = "";
-      let cartContent = [];
-      for (let i in newCart) {
-        for (let k in apiData) {
-          if (newCart[i][0] === apiData[k]._id) {
-            productName = apiData[k].name;
-            cartContent.push(`\n${newCart[i][1]} ${productName} ${newCart[i][2]}`);
-          }
-        }
-      }
-      window.alert(`Panier\n${cartContent}`);
+      // Stocke le panier en local
+      localStorage.setItem("cart", JSON.stringify(newCart));
     })
   })
   .catch(function(error) {
